@@ -1,0 +1,17 @@
+{
+  "name": "notion_gcal",
+  "version": "1.0.0",
+  "main": "query_db.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@notionhq/client": "^2.2.16",
+    "dotenv": "^16.4.7"
+  },
+  "type": "module"
+}
