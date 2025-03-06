@@ -1,7 +1,6 @@
 import { Client } from "@notionhq/client"
 import { config } from "dotenv"
 import fs from "fs"
-import { execSync } from "child_process"
 
 config()
 
@@ -25,7 +24,7 @@ const notion = new Client({ auth: apiKey })
  * Filter database entries: https://developers.notion.com/reference/post-database-query-filter
  */
 
-// query filter options: https://developers.notion.com/reference/post-database-query-filter.
+// https://developers.notion.com/reference/post-database-query-filter.
 async function queryDatabase(databaseId) {
   const statusIsApproved = await notion.databases.query({
     database_id: databaseId,
@@ -63,12 +62,7 @@ async function queryDatabase(databaseId) {
 
 async function main() {
   // generate output.txt
-  await queryDatabase(pageID)
-
-  // generate vacations.json
-  execSync("python3 output_to_json.py")
+  queryDatabase(pageID)
 }
 
 main()
-
-
