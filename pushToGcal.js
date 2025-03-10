@@ -30,17 +30,19 @@ import path from 'path';
 import process from 'process';
 import { authenticate } from '@google-cloud/local-auth';
 import { google } from 'googleapis';
-// import dotenv from 'dotenv';
+import dotenv from 'dotenv';
 
-// dotenv.config();
+dotenv.config();
 
 // If modifying these scopes, delete token.json.
-const SCOPES = ['https://www.googleapis.com/auth/calendar.readonly'];
+const SCOPES = ['https://www.googleapis.com/auth/calendar.events.owned'];
 // The file token.json stores the user's access and refresh tokens, and is
 // created automatically when the authorization flow completes for the first
 // time.
 const TOKEN_PATH = path.join(process.cwd(), 'token.json');
 const CREDENTIALS_PATH = path.join(process.cwd(), 'credentials.json');
+
+const staffEmails = JSON.parse(process.env.STAFF_EMAILS);
 
 /**
  * Reads previously authorized credentials from the save file.
@@ -120,5 +122,76 @@ async function listEvents(auth) {
   });
 }
 
-authorize().then(listEvents).catch(console.error);
+async function addEvent(auth, event) {
+  const calendar = google.calendar({version: 'v3', auth});
+  calendar.events.insert({
+    calendarId: 'primary',
+    resource: event,
+  }, (err, res) => {
+    if (err) {
+      console.error('Error creating event: %s', err);
+      return;
+    }
+    console.log('Event created: %s', res.data.htmlLink);
+  });
+}
+
+async function main() {
+  const auth = await authorize();
+  const data = await fs.readFile('vacations.json');
+  const vacations = JSON.parse(data);
+
+  const testEvent = {
+    summary: 'notion test',
+    location: 'Calgary, AB',
+    description: 'testing Google Calendar API',
+    start: {
+      date: '2025-03-12',
+      timeZone: 'America/Denver',
+    },
+    end: {
+      date: '2025-03-13',
+      timeZone: 'America/Denver',
+    },
+    attendees: [
+      {email: 'azhang@rundle.ab.ca'},
+    ],
+  }
+  await addEvent(auth, testEvent);
+
+  for (const vacation of vacations) {
+    if (!vacation['Start Date']) {
+      console.error('Invalid start date: %s', vacation);
+      continue;
+    }
+    if (!vacation['End Date']) {
+      vacation['End Date'] = vacation['Start Date']
+      continue;
+    }
+
+    const email = staffEmails[vacation['Staff Member']] || '';
+
+    const event = {
+      summary: vacation['Vacation Title'],
+      location: 'Calgary, AB',
+      description: vacation['Staff Member'],
+      start: {
+        dateTime: vacation['Start Date'],
+        timeZone: 'America/Denver',
+      },
+      end: {
+        dateTime: vacation['End Date'],
+        timeZone: 'America/Denver',
+      },
+      attendees: [
+        {email: email},
+      ],
+      eventType: 'outOfOffice',
+    };
+    // await addEvent(auth, event);
+  }
+}
+
+main();
+// authorize().then(listEvents, pushEvents).catch(console.error);
 // [END calendar_quickstart]
