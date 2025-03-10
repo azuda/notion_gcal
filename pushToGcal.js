@@ -1,10 +1,38 @@
-const fs = require('fs').promises;
-const path = require('path');
-const process = require('process');
-const { authenticate } = require('@google-cloud/local-auth');
-const { google } = require('googleapis');
+/**
+ * Source:
+ * https://github.com/googleworkspace/node-samples/blob/main/calendar/quickstart
+ * https://developers.google.com/calendar/api/quickstart/nodejs
+ * 
+ * Copyright 2022 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+/* eslint-disable camelcase */
+// [START calendar_quickstart]
+// const fs = require('fs').promises;
+// const path = require('path');
+// const process = require('process');
+// const {authenticate} = require('@google-cloud/local-auth');
+// const {google} = require('googleapis');
 
-// source: https://developers.google.com/calendar/api/quickstart/nodejs
+import fs from 'fs/promises';
+import path from 'path';
+import process from 'process';
+import { authenticate } from '@google-cloud/local-auth';
+import { google } from 'googleapis';
+// import dotenv from 'dotenv';
+
+// dotenv.config();
 
 // If modifying these scopes, delete token.json.
 const SCOPES = ['https://www.googleapis.com/auth/calendar.readonly'];
@@ -93,3 +121,4 @@ async function listEvents(auth) {
 }
 
 authorize().then(listEvents).catch(console.error);
+// [END calendar_quickstart]
