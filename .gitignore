@@ -1,5 +1,7 @@
 node_modules/
 
 .env
+credentials.json
 output.txt
+token.json
 vacations.json
