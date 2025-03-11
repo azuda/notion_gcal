@@ -41,7 +41,7 @@ const SCOPES = ['https://www.googleapis.com/auth/calendar.events.owned'];
 // time.
 const TOKEN_PATH = path.join(process.cwd(), 'token.json');
 const CREDENTIALS_PATH = path.join(process.cwd(), 'credentials.json');
-
+const calendarID = process.env.CALENDAR_ID;
 const staffEmails = JSON.parse(process.env.STAFF_EMAILS);
 
 /**
@@ -104,28 +104,20 @@ async function authorize() {
 async function listEvents(auth) {
   const calendar = google.calendar({version: 'v3', auth});
   const res = await calendar.events.list({
-    calendarId: 'primary',
+    calendarId: calendarID,
     timeMin: new Date().toISOString(),
-    maxResults: 10,
+    maxResults: 2500,
     singleEvents: true,
     orderBy: 'startTime',
   });
-  const events = res.data.items;
-  if (!events || events.length === 0) {
-    console.log('No upcoming events found.');
-    return;
-  }
-  console.log('Upcoming 10 events:');
-  events.map((event, i) => {
-    const start = event.start.dateTime || event.start.date;
-    console.log(`${start} - ${event.summary}`);
-  });
+  return res.data.items;
 }
 
+// add event to google calendar under specified calendar ID
 async function addEvent(auth, event) {
   const calendar = google.calendar({version: 'v3', auth});
   calendar.events.insert({
-    calendarId: 'primary',
+    calendarId: calendarID,
     resource: event,
   }, (err, res) => {
     if (err) {
@@ -136,59 +128,64 @@ async function addEvent(auth, event) {
   });
 }
 
+// concat time to start and end date strings
+const fixDateTime = (startStr, endStr) => {
+  const startDT = `${startStr}T00:00:00`;
+  const endDT= `${endStr}T23:59:59`;
+  return([startDT, endDT]);
+}
+
+// truncate time from datetime str
+const truncateDateTime = (dateTimeStr) => {
+  return dateTimeStr.split('T')[0];
+}
+
 async function main() {
   const auth = await authorize();
+
   const data = await fs.readFile('vacations.json');
   const vacations = JSON.parse(data);
 
-  const testEvent = {
-    summary: 'notion test',
-    location: 'Calgary, AB',
-    description: 'testing Google Calendar API',
-    start: {
-      date: '2025-03-12',
-      timeZone: 'America/Denver',
-    },
-    end: {
-      date: '2025-03-13',
-      timeZone: 'America/Denver',
-    },
-    attendees: [
-      {email: 'azhang@rundle.ab.ca'},
-    ],
-  }
-  await addEvent(auth, testEvent);
+  // read events that already exist in google calendar
+  const existingEvents = await listEvents(auth);
+  const existingEventSummaries = new Set(existingEvents.map(event => `${event.summary}-${truncateDateTime(event.start.dateTime)}`));
+  console.log("EXISTING EVENTS:");
+  console.log(existingEventSummaries);
 
+  // process all events from vacations.json
   for (const vacation of vacations) {
     if (!vacation['Start Date']) {
       console.error('Invalid start date: %s', vacation);
       continue;
     }
+    // if no end date exists then vacation is a single day event
     if (!vacation['End Date']) {
-      vacation['End Date'] = vacation['Start Date']
+      vacation['End Date'] = vacation['Start Date'];
       continue;
     }
 
     const email = staffEmails[vacation['Staff Member']] || '';
+    const dateRange = fixDateTime(vacation['Start Date'], vacation['End Date']);
 
     const event = {
       summary: vacation['Vacation Title'],
-      location: 'Calgary, AB',
-      description: vacation['Staff Member'],
+      description: email,
       start: {
-        dateTime: vacation['Start Date'],
-        timeZone: 'America/Denver',
+        dateTime: dateRange[0],
+        timeZone: 'Canada/Mountain',
       },
       end: {
-        dateTime: vacation['End Date'],
-        timeZone: 'America/Denver',
+        dateTime: dateRange[1],
+        timeZone: 'Canada/Mountain',
       },
-      attendees: [
-        {email: email},
-      ],
-      eventType: 'outOfOffice',
     };
-    // await addEvent(auth, event);
+
+    const eventKey = `${event.summary}-${vacation['Start Date']}`;
+    if (!existingEventSummaries.has(eventKey)) {
+      await addEvent(auth, event);
+    } else {
+      console.log(`Event already exists: ${event.summary} on ${truncateDateTime(event.start.dateTime)}`);
+    }
   }
 }
 
