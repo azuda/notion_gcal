@@ -16,3 +16,11 @@ cd notion_gcal
 gpg .env.gpg
 ./run.sh
 ```
+
+## todo
+
+- notion triggers
+- event uuid matching
+- delete / edit to match notion db
+- auto cleanup old events
+- deploy to server as cron job / scheduled task
