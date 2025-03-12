@@ -1,6 +1,5 @@
 import json
 
-
 def output_to_json(file_path):
   with open(file_path, "r") as file:
     content = file.read()
@@ -9,8 +8,7 @@ def output_to_json(file_path):
 
   results = []
   for entry in entries:
-    title, properties = entry.split(": ", 1)
-    properties_dict = json.loads(properties)
+    properties_dict = json.loads(entry)
 
     # separate Date Range into Start Date and End Date
     if "Date Range" in properties_dict:
@@ -19,15 +17,13 @@ def output_to_json(file_path):
         start_date, end_date = date_range.split(" to ")
       else:
         start_date = date_range
-        end_date = ""
+        end_date = start_date
       properties_dict["Start Date"] = start_date
       properties_dict["End Date"] = end_date
 
-    properties_dict["Vacation Title"] = title
     results.append(properties_dict)
 
   return results
-
 
 def main():
   file_path = "output.txt"
@@ -35,8 +31,5 @@ def main():
   with open("vacations.json", "w") as json_file:
     json.dump(data, json_file, indent=2)
 
-
 if __name__ == "__main__":
   main()
-
-

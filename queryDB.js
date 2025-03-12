@@ -1,13 +1,13 @@
-import { Client } from "@notionhq/client"
-import { config } from "dotenv"
-import fs from "fs"
+import { Client } from "@notionhq/client";
+import { config } from "dotenv";
+import fs from "fs";
 
-config()
+config();
 
-const pageID = process.env.NOTION_PAGE_ID
-const apiKey = process.env.NOTION_API_KEY
+const pageID = process.env.NOTION_PAGE_ID;
+const apiKey = process.env.NOTION_API_KEY;
 
-const notion = new Client({ auth: apiKey })
+const notion = new Client({ auth: apiKey });
 
 /* 
 ---------------------------------------------------------------------------
@@ -24,8 +24,9 @@ const notion = new Client({ auth: apiKey })
  * Filter database entries: https://developers.notion.com/reference/post-database-query-filter
  */
 
-// https://developers.notion.com/reference/post-database-query-filter.
+// https://developers.notion.com/reference/post-database-query-filter
 async function queryDatabase(databaseId) {
+  // grab all db items with status "Approved"
   const statusIsApproved = await notion.databases.query({
     database_id: databaseId,
     filter: {
@@ -34,35 +35,35 @@ async function queryDatabase(databaseId) {
         equals: "Approved"
       },
     },
-  })
+  });
 
-  const results = []
+  const results = [];
   for (const item of statusIsApproved.results) {
-    const prop = { ...item.properties }
-    // clean up output
-    delete prop.Status
+    // clean up properties of each queried db item
+    const prop = { ...item.properties };
+    delete prop.Status;
+    prop["ID"] = item.id;
     if (prop["Vacation Title"] && prop["Vacation Title"].title) {
-      prop["Vacation Title"] = prop["Vacation Title"].title.map(title => title.plain_text).join(", ")
+      prop["Vacation Title"] = prop["Vacation Title"].title.map(title => title.plain_text).join(", ");
     }
     if (prop["Staff Member"] && prop["Staff Member"].people) {
-      prop["Staff Member"] = prop["Staff Member"].people.map(person => person.name).join(", ")
+      prop["Staff Member"] = prop["Staff Member"].people.map(person => person.name).join(", ");
     }
     if (prop["Date Range"] && prop["Date Range"].date) {
-      const { start, end } = prop["Date Range"].date
-      prop["Date Range"] = end ? `${start} to ${end}` : start
+      const { start, end } = prop["Date Range"].date;
+      prop["Date Range"] = end ? `${start} to ${end}` : start;
     }
-    // print filtered results
-    console.log(item.properties["Vacation Title"].title[0].plain_text + ":", prop)
-    // collect filtered results
-    results.push(`${prop["Vacation Title"]}: ${JSON.stringify(prop, null, 2)}`)
+    // output to .txt
+    results.push(JSON.stringify(prop, null, 2));
+    console.log(prop);
   }
   // write results to txt
-  fs.writeFileSync("output.txt", results.join("\n\n"), "utf-8")
+  fs.writeFileSync("output.txt", results.join("\n\n"), "utf-8");
 }
 
 async function main() {
   // generate output.txt
-  queryDatabase(pageID)
+  queryDatabase(pageID);
 }
 
-main()
+main();
