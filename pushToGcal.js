@@ -123,22 +123,57 @@ async function addEvent(auth, event) {
     resource: event,
   }, (err, res) => {
     if (err) {
-      console.error("Error creating event: %s", err);
+      console.error("Error creating event: %s", JSON.stringify(err.errors, null, 2));
+      const duplicateError = err.errors.find(error => error.reason === "duplicate");
+      if (duplicateError) {
+        updateEvent(auth, event.id, event);
+      }
       return;
     }
     console.log("Event created: %s", res.data.htmlLink);
   });
 }
 
+async function deleteEvent(auth, eventID) {
+  const calendar = google.calendar({ version: "v3", auth });
+  calendar.events.delete({
+    calendarId: calendarID,
+    eventId: eventID,
+  }, (err, res) => {
+    if (err) {
+      console.error(`Error deleting event:`, err);
+      return;
+    }
+    console.log(`Event deleted: ${eventID}`);
+  });
+}
+
+async function updateEvent(auth, eventID, newEvent) {
+  const calendar = google.calendar({ version: "v3", auth });
+  console.log(`Updating event ${newEvent.summary} with id ${eventID}`);
+  // console.log(JSON.stringify(newEvent, null, 2));
+
+  calendar.events.update({
+    calendarId: calendarID,
+    eventId: eventID,
+    resource: newEvent,
+  }, (err, res) => {
+    if (err) {
+      console.error("Error updating event: %s", JSON.stringify(err.errors, null, 2));
+      return;
+    }
+    console.log(`Event updated: ${res.data.htmlLink}`);
+  });
+}
+
 // concat time to start and end date strings
-const fixDateTime = (startStr, endStr) => {
+const addTimezone = (startStr, endStr) => {
   if (startStr == endStr) {
-    return([startStr, endStr])
+    return([startStr, endStr]);
   }
   const startDT = `${startStr}T00:00:00`;
   const endDT = `${endStr}T23:59:59`;
-  // return([startDT, endDT]);
-  return([startStr, endStr]);
+  return([startDT, endDT]);
 }
 
 // truncate time from datetime str
@@ -159,10 +194,10 @@ async function main() {
   const vacations = JSON.parse(data);
 
   // read events that already exist in google calendar
-  // const existingEvents = await listEvents(auth);
-  // const existingEventSummaries = new Set(existingEvents.map(event => `${event.summary}-${truncateDateTime(event.start.dateTime)}`));
-  // console.log("EXISTING EVENTS:");
-  // console.log(existingEventSummaries);
+  const existingEvents = await listEvents(auth);
+  const existingEventCheck = new Set(existingEvents.map(event => `${event.id}-${truncateDateTime(event.start.dateTime)}-${truncateDateTime(event.end.dateTime)}`));
+  console.log("EXISTING EVENTS:");
+  console.log(existingEventCheck);
 
   // process all events from vacations.json
   for (const vacation of vacations) {
@@ -172,16 +207,17 @@ async function main() {
     }
 
     const email = staffEmails[vacation["Staff Member"]] || "";
-    const dateRange = fixDateTime(vacation["Start Date"], vacation["End Date"]);
+    const dateRange = addTimezone(vacation["Start Date"], vacation["End Date"]);
     let oneDay = false;
     if (dateRange[0] == dateRange[1]) {
       oneDay = true;
     }
 
+    const id = vacation["ID"].replace(/-/g, "");
     let event = {
-      id: vacation["ID"].replace(/-/g, ""),
+      id: id,
       summary: vacation["Vacation Title"],
-      description: email,
+      description: `${email}\n${id}`,
     };
     if (oneDay == true) {
       event.start = {
@@ -192,8 +228,7 @@ async function main() {
         date: dateRange[1],
         timeZone: "Canada/Mountain",
       };
-    }
-    else {
+    } else {
       event.start = {
         dateTime: dateRange[0],
         timeZone: "Canada/Mountain",
@@ -204,12 +239,15 @@ async function main() {
       };
     }
 
-    // const eventKey = `${event.summary}-${vacation["Start Date"]}`;
-    // if (!existingEventSummaries.has(eventKey)) {
-    //   await addEvent(auth, event);
-    // } else {
-    //   console.log(`Event already exists: ${event.summary} on ${truncateDateTime(event.start.dateTime)}`);
-    // }
+
+    addEvent(auth, event);
+
+  //   const eventKey = `${event.id}-${vacation["Start Date"]}-${vacation["End Date"]}`;
+  //   if (!existingEventCheck.has(eventKey)) {
+  //     await addEvent(auth, event);
+  //   } else {
+  //     console.log(`Event already exists: ${event.summary} on ${truncateDateTime(event.start.dateTime)}`);
+  //   }
   }
 }
 
