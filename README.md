@@ -20,7 +20,7 @@ gpg .env.gpg
 ## todo
 
 - notion triggers
-- event uuid matching
-- delete / edit to match notion db
+- ~~event uuid matching~~
+- ~~delete / edit to match notion db~~
 - auto cleanup old events
 - deploy to server as cron job / scheduled task
