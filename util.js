@@ -1,7 +1,3 @@
-
-
-
-
 // concat time to start and end date strings
 export const addTimeZone = (startStr, endStr) => {
   if (startStr == endStr) {
