@@ -32,6 +32,7 @@ import { authenticate } from "@google-cloud/local-auth";
 import { google } from "googleapis";
 import dotenv from "dotenv";
 import { v4 as uuid4 } from "uuid";
+import * as util from  "./util.js";
 
 dotenv.config();
 
@@ -166,26 +167,6 @@ async function updateEvent(auth, eventID, newEvent) {
   });
 }
 
-// concat time to start and end date strings
-const addTimezone = (startStr, endStr) => {
-  if (startStr == endStr) {
-    return([startStr, endStr]);
-  }
-  const startDT = `${startStr}T00:00:00`;
-  const endDT = `${endStr}T23:59:59`;
-  return([startDT, endDT]);
-}
-
-// truncate time from datetime str
-const truncateDateTime = (dateTimeStr) => {
-  try {
-    return dateTimeStr.split("T")[0];
-  } catch (err) {
-    console.error(err);
-    return dateTimeStr;
-  }
-}
-
 // main function
 async function main() {
   const auth = await authorize();
@@ -195,7 +176,7 @@ async function main() {
 
   // read events that already exist in google calendar
   const existingEvents = await listEvents(auth);
-  const existingEventCheck = new Set(existingEvents.map(event => `${event.id}-${truncateDateTime(event.start.dateTime)}-${truncateDateTime(event.end.dateTime)}`));
+  const existingEventCheck = new Set(existingEvents.map(event => `${event.id}-${util.truncateDateTime(event.start.dateTime)}-${util.truncateDateTime(event.end.dateTime)}`));
   console.log("EXISTING EVENTS:");
   console.log(existingEventCheck);
 
@@ -207,7 +188,12 @@ async function main() {
     }
 
     const email = staffEmails[vacation["Staff Member"]] || "";
-    const dateRange = addTimezone(vacation["Start Date"], vacation["End Date"]);
+    const dateRange = util.addTimeZone(vacation["Start Date"], vacation["End Date"]);
+    // const dateRange = util.filterWeekdays(vacation["Start Date"], vacation["End Date"]);
+    // if (!dateRange) {
+    //   console.log(`No weekdays in the date range for ${vacation["Vacation Title"]}`);
+    //   continue;
+    // }
     let oneDay = false;
     if (dateRange[0] == dateRange[1]) {
       oneDay = true;
@@ -239,14 +225,13 @@ async function main() {
       };
     }
 
-
     addEvent(auth, event);
 
   //   const eventKey = `${event.id}-${vacation["Start Date"]}-${vacation["End Date"]}`;
   //   if (!existingEventCheck.has(eventKey)) {
   //     await addEvent(auth, event);
   //   } else {
-  //     console.log(`Event already exists: ${event.summary} on ${truncateDateTime(event.start.dateTime)}`);
+  //     console.log(`Event already exists: ${event.summary} on ${util.truncateDateTime(event.start.dateTime)}`);
   //   }
   }
 }
