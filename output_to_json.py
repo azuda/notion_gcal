@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 
 def output_to_json(file_path):
   with open(file_path, "r") as file:
@@ -20,6 +21,11 @@ def output_to_json(file_path):
         end_date = start_date
       properties_dict["Start Date"] = start_date
       properties_dict["End Date"] = end_date
+
+      # skip entry if End Date is in the past
+      end_date_obj = datetime.strptime(end_date, "%Y-%m-%d")
+      if end_date_obj < datetime.now():
+        continue
 
     results.append(properties_dict)
 
