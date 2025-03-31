@@ -125,6 +125,7 @@ async function addEvent(auth, event) {
   }, (err, res) => {
     if (err) {
       console.error("Error creating event: %s", JSON.stringify(err.errors, null, 2));
+      // if event has duplicate id then update the existing event
       const duplicateError = err.errors.find(error => error.reason === "duplicate");
       if (duplicateError) {
         updateEvent(auth, event.id, event);
@@ -132,20 +133,6 @@ async function addEvent(auth, event) {
       return;
     }
     console.log("Event created: %s", res.data.htmlLink);
-  });
-}
-
-async function deleteEvent(auth, eventID) {
-  const calendar = google.calendar({ version: "v3", auth });
-  calendar.events.delete({
-    calendarId: calendarID,
-    eventId: eventID,
-  }, (err, res) => {
-    if (err) {
-      console.error(`Error deleting event:`, err);
-      return;
-    }
-    console.log(`Event deleted: ${eventID}`);
   });
 }
 
@@ -167,18 +154,53 @@ async function updateEvent(auth, eventID, newEvent) {
   });
 }
 
+async function deleteEvent(auth, eventID) {
+  const calendar = google.calendar({ version: "v3", auth });
+  calendar.events.delete({
+    calendarId: calendarID,
+    eventId: eventID,
+  }, (err, res) => {
+    if (err) {
+      console.error(`Error deleting event:`, err);
+      return;
+    }
+    console.log(`Event deleted: ${eventID}`);
+  });
+}
+
+async function syncDeletedEvents(auth) {
+  // get all event ids from google calendar
+  const existingEvents = await listEvents(auth);
+  const gcalIDs = new Set(existingEvents.map(event => event.id));
+
+  // get all event ids from notion db
+  const notionData = JSON.parse(await fs.readFile("vacations.json"));
+  const notionIDs = new Set(notionData.map(event => event["ID"].replace(/-/g, "")));
+
+  // get events in google calendar that arent in notion db
+  const eventsToDelete = [...gcalIDs].filter(id => !notionIDs.has(id));
+
+  // delete
+  for (const eventID of eventsToDelete) {
+    console.log(`Deleting event ${eventID}`);
+    await deleteEvent(auth, eventID);
+  }
+}
+
 // main function
 async function main() {
   const auth = await authorize();
+
+  await syncDeletedEvents(auth);
 
   const data = await fs.readFile("vacations.json");
   const vacations = JSON.parse(data);
 
   // read events that already exist in google calendar
-  const existingEvents = await listEvents(auth);
-  const existingEventCheck = new Set(existingEvents.map(event => `${event.id}-${util.truncateDateTime(event.start.dateTime)}-${util.truncateDateTime(event.end.dateTime)}`));
-  console.log("EXISTING EVENTS:");
-  console.log(existingEventCheck);
+  // const existingEvents = await listEvents(auth);
+  // const existingEventCheck = new Set(existingEvents.map(event => `${event.id}-${util.truncateDateTime(event.start.dateTime)}-${util.truncateDateTime(event.end.dateTime)}`));
+  // console.log("EXISTING EVENTS:");
+  // console.log(existingEventCheck);
 
   // process all events from vacations.json
   for (const vacation of vacations) {
@@ -203,7 +225,7 @@ async function main() {
     let event = {
       id: id,
       summary: vacation["Vacation Title"],
-      description: `${email}\n${id}`,
+      description: `${email}\n${vacation["ID"]}`,
     };
     if (oneDay == true) {
       event.start = {
