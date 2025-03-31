@@ -9,4 +9,4 @@ node queryDB.js >> "$LOG_FILE" 2>&1
 python3 output_to_json.py >> "$LOG_FILE" 2>&1
 node pushToGcal.js >> "$LOG_FILE" 2>&1
 
-echo "Script finished at $(date)" >> "$LOG_FILE"
+echo -e "\nScript finished at $(date)" >> "$LOG_FILE"
