@@ -1,7 +1,6 @@
 #!/bin/bash
 
-if [ -f "script.log" ]; then  touch script.log; fi
-LOG_FILE = "script.log"
+LOG_FILE="script.log"
 > "$LOG_FILE"
 echo "Script started at $(date)" >> "$LOG_FILE"
 
