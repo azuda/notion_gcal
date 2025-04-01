@@ -112,7 +112,7 @@ async function listEvents(auth) {
     singleEvents: true,
     orderBy: "startTime",
   });
-  console.log(`EVENT IDs: ${res.data.items.map(event => event.id)}`);
+  // console.log(`EVENT IDs: ${res.data.items.map(event => event.id)}`);
   return res.data.items;
 }
 
@@ -128,7 +128,7 @@ async function addEvent(auth, event) {
       // if event has duplicate id then update the existing event
       const duplicateError = err.errors.find(error => error.reason === "duplicate");
       if (duplicateError) {
-        updateEvent(auth, event.id, event);
+        updateEvent(calendar, event.id, event);
       }
       return;
     }
@@ -136,8 +136,8 @@ async function addEvent(auth, event) {
   });
 }
 
-async function updateEvent(auth, eventID, newEvent) {
-  const calendar = google.calendar({ version: "v3", auth });
+async function updateEvent(calendar, eventID, newEvent) {
+  // const calendar = google.calendar({ version: "v3", auth });
   console.log(`Updating event ${newEvent.summary} with id ${eventID}`);
   // console.log(JSON.stringify(newEvent, null, 2));
 
@@ -197,8 +197,8 @@ async function main() {
   const vacations = JSON.parse(data);
 
   // read events that already exist in google calendar
-  // const existingEvents = await listEvents(auth);
-  // const existingEventCheck = new Set(existingEvents.map(event => `${event.id}-${util.truncateDateTime(event.start.dateTime)}-${util.truncateDateTime(event.end.dateTime)}`));
+  const existingEvents = await listEvents(auth);
+  const existingEventCheck = new Set(existingEvents.map(event => `${event.id}-${util.truncateDateTime(event.start.dateTime)}-${util.truncateDateTime(event.end.dateTime)}`));
   // console.log("EXISTING EVENTS:");
   // console.log(existingEventCheck);
 
@@ -247,14 +247,13 @@ async function main() {
       };
     }
 
-    addEvent(auth, event);
-
-  //   const eventKey = `${event.id}-${vacation["Start Date"]}-${vacation["End Date"]}`;
-  //   if (!existingEventCheck.has(eventKey)) {
-  //     await addEvent(auth, event);
-  //   } else {
-  //     console.log(`Event already exists: ${event.summary} on ${util.truncateDateTime(event.start.dateTime)}`);
-  //   }
+    // addEvent(auth, event);
+    const eventKey = `${vacation["ID"].replace(/-/g, "")}-${vacation["Start Date"]}-${vacation["End Date"]}`;
+    if (existingEventCheck.has(eventKey)) {
+      console.log(`Skipping existing event ${vacation["Vacation Title"]}`);
+      continue;
+    }
+    await addEvent(auth, event);
   }
 }
 
