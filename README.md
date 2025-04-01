@@ -23,6 +23,7 @@ gpg .env.gpg
 - ~~event uuid matching~~
 - ~~allow editing existing events~~
 - ~~auto cleanup old events~~
-- reduce api calls when pushing events to gcal
-- handle deleted events
+- ~~reduce api calls when pushing events to gcal~~
+- ~~handle deleted events~~
+- fix single day events updating
 - deploy to server as cron job / scheduled task
