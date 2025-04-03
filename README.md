@@ -17,6 +17,15 @@ gpg .env.gpg
 ./run.sh
 ```
 
+Set up scheduled task with launchd (macOS):
+
+```bash
+cp com.notiongcal.daily.plist ~/Library/LaunchAgents
+
+# need to use absolute path
+launchctl load ~/Library/LaunchAgents/com.notiongcal.daily.plist
+```
+
 ## todo
 
 - notion triggers?
