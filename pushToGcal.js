@@ -198,9 +198,13 @@ async function main() {
 
   // read events that already exist in google calendar
   const existingEvents = await listEvents(auth);
-  const existingEventCheck = new Set(existingEvents.map(event => `${event.id}-${util.truncateDateTime(event.start.dateTime)}-${util.truncateDateTime(event.end.dateTime)}`));
-  // console.log("EXISTING EVENTS:");
-  // console.log(existingEventCheck);
+  const existingEventCheck = new Set(
+    existingEvents.map(event => {
+      const startDateTime = event.start.dateTime || event.start.date;
+      const endDateTime = event.end.dateTime || event.end.date;
+      return `${event.id}-${util.truncateDateTime(startDateTime)}-${util.truncateDateTime(endDateTime)}`;
+    })
+  );
 
   // process all events from vacations.json
   for (const vacation of vacations) {
