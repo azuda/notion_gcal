@@ -4,6 +4,7 @@ Custom solution for pushing Notion database items to Google Calendar via API
 
 ## Requirements
 
+- macOS
 - NodeJS
 - Python3
 - GPG
