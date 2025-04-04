@@ -6,12 +6,12 @@
 	<string>com.notiongcal.daily</string>
 	<key>ProgramArguments</key>
 	<array>
-		<string>~/Scripts/notion_gcal/run.sh</string>
+		<string>~/notion_gcal/run.sh</string> <!-- USE ABSOLUTE FILEPATH -->
 	</array>
-	<key>StartCalendarInterval</key>
+	<key>StartInterval</key>
 	<dict>
 		<key>Hour</key>
-		<integer>12</integer>
+		<integer>24</integer>
 		<key>Minute</key>
 		<integer>0</integer>
 	</dict>
