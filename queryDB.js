@@ -55,7 +55,8 @@ async function queryDatabase(databaseId) {
     }
     // output to .txt
     results.push(JSON.stringify(prop, null, 2));
-    console.log(prop);
+    // console.log("Item written to output.txt:")
+    // console.log(prop);
   }
   // write results to txt
   fs.writeFileSync("output.txt", results.join("\n\n"), "utf-8");

@@ -26,9 +26,11 @@ def output_to_json(file_path):
       end_date_obj = datetime.strptime(end_date, "%Y-%m-%d")
       if end_date_obj < datetime.now():
         continue
-
+    
     results.append(properties_dict)
 
+  print(f"Items written to vacations.json:")
+  print(json.dumps(results, indent=2))
   return results
 
 def main():

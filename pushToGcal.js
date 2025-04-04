@@ -118,6 +118,8 @@ async function listEvents(auth) {
 
 // add event to google calendar under specified calendar ID
 async function addEvent(auth, event) {
+  console.log(`Adding event "${event.summary}" with id ${event.id}`);
+
   const calendar = google.calendar({version: "v3", auth});
   calendar.events.insert({
     calendarId: calendarID,
@@ -132,13 +134,13 @@ async function addEvent(auth, event) {
       }
       return;
     }
-    console.log("Event created: %s", res.data.htmlLink);
+    console.log(`Successfully added "${event.summary}": ${res.data.htmlLink}`);
   });
 }
 
 async function updateEvent(calendar, eventID, newEvent) {
   // const calendar = google.calendar({ version: "v3", auth });
-  console.log(`Updating event ${newEvent.summary} with id ${eventID}`);
+  console.log(`Updating event "${newEvent.summary}" with id ${eventID}`);
   // console.log(JSON.stringify(newEvent, null, 2));
 
   calendar.events.update({
@@ -150,11 +152,11 @@ async function updateEvent(calendar, eventID, newEvent) {
       console.error("Error updating event: %s", JSON.stringify(err.errors, null, 2));
       return;
     }
-    console.log(`Event updated: ${res.data.htmlLink}`);
+    console.log(`Successfully updated "${newEvent.summary}": ${res.data.htmlLink}`);
   });
 }
 
-async function deleteEvent(auth, eventID) {
+async function deleteEvent(auth, eventID, summary) {
   const calendar = google.calendar({ version: "v3", auth });
   calendar.events.delete({
     calendarId: calendarID,
@@ -164,7 +166,7 @@ async function deleteEvent(auth, eventID) {
       console.error(`Error deleting event:`, err);
       return;
     }
-    console.log(`Event deleted: ${eventID}`);
+    console.log(`Deleted "${summary}" ${eventID}`);
   });
 }
 
@@ -182,8 +184,10 @@ async function syncDeletedEvents(auth) {
 
   // delete
   for (const eventID of eventsToDelete) {
-    console.log(`Deleting event ${eventID}`);
-    await deleteEvent(auth, eventID);
+    const eventToDelete = existingEvents.find(event => event.id === eventID);
+    const eventSummary = eventToDelete?.summary || "NO DESC FOUND"
+    console.log(`Deleting event "${eventSummary}" with id ${eventID}`);
+    await deleteEvent(auth, eventID, eventSummary);
   }
 }
 
@@ -254,7 +258,7 @@ async function main() {
     // addEvent(auth, event);
     const eventKey = `${vacation["ID"].replace(/-/g, "")}-${vacation["Start Date"]}-${vacation["End Date"]}`;
     if (existingEventCheck.has(eventKey)) {
-      console.log(`Skipping existing event ${vacation["Vacation Title"]}`);
+      console.log(`Skipping existing event "${vacation["Vacation Title"]}"`);
       continue;
     }
     await addEvent(auth, event);
