@@ -1,8 +1,8 @@
+logs/
 node_modules/
 
 .env
 credentials.json
 output.txt
-script.log
 token.json
 vacations.json
