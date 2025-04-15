@@ -4,13 +4,20 @@
 	<dict>
 
 		<key>Label</key>
-		<string>com.notiongcal.daemon.plist</string>
+		<string>com.notiongcal.daemon</string>
 
 		<key>RunAtLoad</key>
 		<true/>
 
-		<key>StartInterval</key>
-		<int>86400</int>
+		<!-- <key>StartInterval</key>
+		<integer>86400</integer> -->
+		<key>StartCalendarInterval</key>
+		<dict>
+			<key>Hour</key>
+			<integer>9</integer>
+			<key>Minute</key>
+			<integer>0</integer>
+		</dict>
 
 		<key>StandardErrorPath</key>
 		<string>/Users/azhang/Scripts/notion_gcal/logs/stderr.log</string>
@@ -21,7 +28,7 @@
 		<key>EnvironmentVariables</key>
 		<dict>
 			<key>PATH</key>
-			<string><![CDATA[/usr/local/bin:/usr/local/sbin:/usr/bin:/bin:/usr/sbin:/sbin]]></string>
+			<string><![CDATA[/usr/local/bin:/usr/local/sbin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin:/Users/azhang/.nvm/versions/node/v22.14.0/bin]]></string>
 		</dict>
 
 		<key>WorkingDirectory</key>
