@@ -14,30 +14,30 @@
 		<key>StartCalendarInterval</key>
 		<dict>
 			<key>Hour</key>
-			<integer>9</integer>
+			<integer>6</integer>
 			<key>Minute</key>
 			<integer>0</integer>
 		</dict>
 
 		<key>StandardErrorPath</key>
-		<string>/Users/azhang/Scripts/notion_gcal/logs/stderr.log</string>
+		<string>/Users/atrac/Scripts/notion_gcal/logs/stderr.log</string>
 
 		<key>StandardOutPath</key>
-		<string>/Users/azhang/Scripts/notion_gcal/logs/stdout.log</string>
+		<string>/Users/atrac/Scripts/notion_gcal/logs/stdout.log</string>
 
 		<key>EnvironmentVariables</key>
 		<dict>
 			<key>PATH</key>
-			<string><![CDATA[/usr/local/bin:/usr/local/sbin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin:/Users/azhang/.nvm/versions/node/v22.14.0/bin]]></string>
+			<string><![CDATA[/usr/local/bin:/usr/local/sbin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin]]></string>
 		</dict>
 
 		<key>WorkingDirectory</key>
-		<string>/Users/azhang/Scripts/notion_gcal/</string>
+		<string>/Users/atrac/Scripts/notion_gcal/</string>
 
 		<key>ProgramArguments</key>
 		<array>
 			<string>/bin/bash</string>
-			<string>/Users/azhang/Scripts/notion_gcal/run.sh</string>
+			<string>/Users/atrac/Scripts/notion_gcal/run.sh</string>
 		</array>
 
 	</dict>
