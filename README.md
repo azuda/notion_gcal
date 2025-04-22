@@ -21,8 +21,7 @@ gpg .env.gpg
 Set up scheduled task with launchd (macOS):
 
 ```bash
-# use absolute paths
-# need to edit .plist to point to correct paths
+# need to edit .plist to point to correct paths - use absolute paths
 cp com.notiongcal.daemon.plist ~/Library/LaunchAgents
 launchctl load ~/Library/LaunchAgents/com.notiongcal.daemon.plist
 ```
