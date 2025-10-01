@@ -9,6 +9,11 @@ def output_to_json(file_path):
 
   results = []
   for entry in entries:
+    # skip empty
+    entry = entry.strip()
+    if not entry:
+      continue
+
     properties_dict = json.loads(entry)
 
     # separate Date Range into Start Date and End Date
