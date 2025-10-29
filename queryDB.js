@@ -26,19 +26,32 @@ const notion = new Client({ auth: apiKey });
 
 // https://developers.notion.com/reference/post-database-query-filter
 async function queryDatabase(databaseId) {
-  // grab all db items with status "Approved"
-  const statusIsApproved = await notion.databases.query({
+  // updated query untested
+  // const statusCheck = async () => {
+  //   const response = await notion.databases.query({
+  //     data_source_id: pageID,
+  //     filter: {
+  //       property: "Status",
+  //       status: {
+  //         or: [ { equals: "Approved" }, { equals: "Archived" } ]
+  //       }
+  //     }
+  //   })
+  // }
+
+  // grab all db items with status "Approved" or "Archived"
+  const statusCheck = await notion.databases.query({
     database_id: databaseId,
     filter: {
       property: "Status",
       status: {
-        equals: "Approved"
+        or: [ { equals: "Approved" }, { equals: "Archived" } ]
       },
     },
   });
 
   const results = [];
-  for (const item of statusIsApproved.results) {
+  for (const item of statusCheck.results) {
     // clean up properties of each queried db item
     const prop = { ...item.properties };
     delete prop.Status;
