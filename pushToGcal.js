@@ -255,8 +255,18 @@ async function main() {
       };
     }
 
-    // addEvent(auth, event);
-    const eventKey = `${vacation["ID"].replace(/-/g, "")}-${vacation["Start Date"]}-${vacation["End Date"]}`;
+    // const eventKey = `${vacation["ID"].replace(/-/g, "")}-${vacation["Start Date"]}-${vacation["End Date"]}`;
+    let localEndDate = vacation["End Date"];
+    const isAllDay = dateRange[0] == dateRange[1] || dateRange[0].length === 10; // Check if it's an all-day event
+
+    if (isAllDay) {
+      // GCAL return exclusive end date (1 day after actual end date)
+      const end = new Date(localEndDate);
+      end.setDate(end.getDate() + 1);
+      localEndDate = end.toISOString().split('T')[0]; // format to YYYY-MM-DD
+    }
+    const eventKey = `${vacation["ID"].replace(/-/g, "")}-${vacation["Start Date"]}-${localEndDate}`;
+
     if (existingEventCheck.has(eventKey)) {
       console.log(`Skipping existing event "${vacation["Vacation Title"]}"`);
       continue;
