@@ -117,43 +117,95 @@ async function listEvents(auth) {
 }
 
 // add event to google calendar under specified calendar ID
-async function addEvent(auth, event) {
-  console.log(`Adding event "${event.summary}" with id ${event.id}`);
+// async function addEvent(auth, event) {
+//   console.log(`Adding event "${event.summary}" with id ${event.id}`);
 
-  const calendar = google.calendar({version: "v3", auth});
-  calendar.events.insert({
-    calendarId: calendarID,
-    resource: event,
-  }, (err, res) => {
-    if (err) {
-      console.error("Error creating event: %s", JSON.stringify(err.errors, null, 2));
-      // if event has duplicate id then update the existing event
-      const duplicateError = err.errors.find(error => error.reason === "duplicate");
-      if (duplicateError) {
-        updateEvent(calendar, event.id, event);
-      }
-      return;
-    }
+//   const calendar = google.calendar({version: "v3", auth});
+//   calendar.events.insert({
+//     calendarId: calendarID,
+//     resource: event,
+//   }, (err, res) => {
+//     if (err) {
+//       console.error("Error creating event: %s", JSON.stringify(err.errors, null, 2));
+//       // if event has duplicate id then update the existing event
+//       const duplicateError = err.errors.find(error => error.reason === "duplicate");
+//       if (duplicateError) {
+//         updateEvent(calendar, event.id, event);
+//       }
+//       return;
+//     }
+//     console.log(`Successfully added "${event.summary}": ${res.data.htmlLink}`);
+//   });
+// }
+
+// async function updateEvent(calendar, eventID, newEvent) {
+//   // const calendar = google.calendar({ version: "v3", auth });
+//   console.log(`Updating event "${newEvent.summary}" with id ${eventID}`);
+//   // console.log(JSON.stringify(newEvent, null, 2));
+
+//   calendar.events.update({
+//     calendarId: calendarID,
+//     eventId: eventID,
+//     resource: newEvent,
+//   }, (err, res) => {
+//     if (err) {
+//       console.error("Error updating event: %s", JSON.stringify(err.errors, null, 2));
+//       return;
+//     }
+//     console.log(`Successfully updated "${newEvent.summary}": ${res.data.htmlLink}`);
+//   });
+// }
+
+async function addOrUpdateEvent(auth, event) {
+  const calendar = google.calendar({ version: "v3", auth });
+
+  try {
+    // 1. Attempt to INSERT the event (for truly new events)
+    console.log(`Attempting to add event "${event.summary}" with id ${event.id}`);
+    const res = await calendar.events.insert({
+      calendarId: calendarID,
+      resource: event,
+    });
     console.log(`Successfully added "${event.summary}": ${res.data.htmlLink}`);
-  });
+    return res.data;
+
+  } catch (err) {
+    const errorBody = err.errors ? JSON.stringify(err.errors, null, 2) : err.message;
+
+    // Check if the error is the "duplicate" error
+    const isDuplicateError = err.errors && err.errors.some(error => error.reason === "duplicate");
+
+    if (isDuplicateError) {
+      // 2. If INSERT failed due to duplicate ID, attempt to UPDATE the existing event
+      console.log(`Duplicate ID detected for "${event.summary}". Attempting update.`);
+      try {
+        const res = await updateEvent(calendar, event.id, event);
+        return res; // Update successful
+      } catch (updateErr) {
+        // Handle update failure
+        const updateErrorBody = updateErr.errors ? JSON.stringify(updateErr.errors, null, 2) : updateErr.message;
+        console.error("Critical: Failed to update event after duplicate insert failure:", updateErrorBody);
+        throw new Error(`Failed to update event: ${event.summary}`); // Stop processing this event
+      }
+    } else {
+      // Handle other non-duplicate errors (e.g., Auth, Invalid Date, etc.)
+      console.error(`Error processing event "${event.summary}" (ID: ${event.id}):`, errorBody);
+      throw err; // Stop processing this event
+    }
+  }
 }
 
 async function updateEvent(calendar, eventID, newEvent) {
-  // const calendar = google.calendar({ version: "v3", auth });
   console.log(`Updating event "${newEvent.summary}" with id ${eventID}`);
-  // console.log(JSON.stringify(newEvent, null, 2));
 
-  calendar.events.update({
+  const res = await calendar.events.update({
     calendarId: calendarID,
     eventId: eventID,
     resource: newEvent,
-  }, (err, res) => {
-    if (err) {
-      console.error("Error updating event: %s", JSON.stringify(err.errors, null, 2));
-      return;
-    }
-    console.log(`Successfully updated "${newEvent.summary}": ${res.data.htmlLink}`);
   });
+
+  console.log(`Successfully updated "${newEvent.summary}": ${res.data.htmlLink}`);
+  return res.data;
 }
 
 async function deleteEvent(auth, eventID, summary) {
@@ -271,7 +323,8 @@ async function main() {
       console.log(`Skipping existing event "${vacation["Vacation Title"]}"`);
       continue;
     }
-    await addEvent(auth, event);
+    // await addEvent(auth, event);
+    await addOrUpdateEvent(auth, event);
   }
 }
 

@@ -36,7 +36,7 @@
 
 		<key>ProgramArguments</key>
 		<array>
-			<string>/bin/bash</string>
+			<string>/bin/zsh</string>
 			<string>/Users/atrac/Scripts/notion_gcal/run.sh</string>
 		</array>
 
